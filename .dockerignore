@@ -75,6 +75,8 @@ build/
 dist/
 *.egg-info/
 rust/**/target/
+frontend/node_modules/
+frontend/dist/
 
 # Docker
 Dockerfile*

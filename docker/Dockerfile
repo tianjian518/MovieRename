@@ -1,9 +1,19 @@
 # syntax=docker/dockerfile:1
 # MovieRename 精简镜像
 # 仅保留「重命名 + 整理 + TMDB 识别」功能，已移除插件 / 浏览器 / 站点二进制 /
-# 下载器 / 消息推送 / AI 智能体 / LLM / nginx 等依赖与下载步骤。
-# 内置极简 Web 前端（单页 HTML，无需额外构建），支持 linux/amd64 与 linux/arm64。
+# 下载器 / 消息推送 / AI 智能体 / LLM 等依赖与下载步骤。
+# 前端为原版 MoviePilot 前端（v2.2.9）精简而来：仅保留重命名/整理相关界面，
+# 构建产物经 /public 由后端同源提供。支持 linux/amd64 与 linux/arm64。
 
+# ---------- 前端构建阶段 ----------
+FROM node:22-alpine AS frontend
+WORKDIR /fe
+# 仅复制前端工程文件（依赖锁文件已随仓库提供，保证可复现）
+COPY frontend/ ./
+RUN yarn install --frozen-lockfile \
+    && yarn build
+
+# ---------- 运行时阶段 ----------
 FROM python:3.12-slim-bookworm
 
 ENV LANG="C.UTF-8" \
@@ -45,8 +55,12 @@ RUN python3 -m venv ${VENV_PATH} \
     && pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r /app/requirements.in
 
-# 拷贝应用代码（包含 app/、config/、version.py 等）
+# 拷贝应用代码（包含 app/、config/、version.py、frontend/ 等）
 COPY . /app
+
+# 将前端构建产物放入 /app/public，并清理前端源码以减小镜像体积
+COPY --from=frontend /fe/dist /app/public
+RUN rm -rf /app/frontend
 
 # 准备运行目录与入口脚本
 RUN mkdir -p ${HOME} ${CONFIG_DIR} \
