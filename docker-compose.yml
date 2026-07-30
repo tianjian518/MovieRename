@@ -1,0 +1,23 @@
+services:
+  movierename:
+    # 替换为你的镜像地址，例如 <dockerhub-user>/movierename:1.0
+    image: movierename:1.0
+    container_name: movierename
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./config:/config
+      - /your/media/path:/media:rw
+    environment:
+      - TZ=Asia/Shanghai
+      - PUID=0
+      - PGID=0
+      - UMASK=000
+      - CONFIG_DIR=/config
+      - PORT=3000
+      - HOST=0.0.0.0
+      # TMDB 识别必需，请填入你自己的 Key
+      - MOVIEPILOT_TMDB_API_KEY=
+      # API 令牌，默认 moviepilot
+      - API_TOKEN=moviepilot
+    restart: unless-stopped
