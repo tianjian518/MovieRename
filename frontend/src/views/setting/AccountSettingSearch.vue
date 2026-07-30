@@ -222,7 +222,7 @@ onMounted(() => {
                 v-model="SystemSettings.Basic.TORRENT_TAG"
                 label="下载任务标签"
                 placeholder="MOVIEPILOT"
-                hint="MoviePilot添加的下载任务标签"
+                hint="MovieRename添加的下载任务标签"
                 persistent-hint
               />
             </VCol>

@@ -177,7 +177,7 @@ onMounted(() => {
                   v-model="siteSetting.CookieCloud.COOKIECLOUD_INTERVAL"
                   label="自动同步间隔"
                   :items="CookieCloudIntervalItems"
-                  hint="从CookieCloud服务器自动同步站点Cookie到MoviePilot的时间间隔"
+                  hint="从CookieCloud服务器自动同步站点Cookie到MovieRename的时间间隔"
                   persistent-hint
                 />
               </VCol>

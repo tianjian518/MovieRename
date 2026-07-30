@@ -68,7 +68,7 @@ onMounted(() => {
   <div class="px-3">
     <div class="section">
       <div>
-        <h3 class="heading">关于 MoviePilot</h3>
+        <h3 class="heading">关于 MovieRename</h3>
       </div>
       <div class="section border-t border-gray-800">
         <dl>
@@ -80,7 +80,7 @@ onMounted(() => {
                   <code class="truncate">{{ systemEnv.VERSION }}</code>
                   <a
                     v-if="latestRelease === systemEnv.VERSION"
-                    href="https://github.com/jxxghp/MoviePilot/releases"
+                    href="https://github.com/tianjian518/MovieRename/releases"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -182,12 +182,12 @@ onMounted(() => {
               <dd class="flex text-sm sm:col-span-2 sm:mt-0">
                 <span class="flex-grow undefined">
                   <a
-                    href="https://github.com/jxxghp/MoviePilot/issues/new/choose"
+                    href="https://github.com/tianjian518/MovieRename/issues/new/choose"
                     target="_blank"
                     rel="noreferrer"
                     class="text-indigo-500 transition duration-300 hover:underline"
                   >
-                    https://github.com/jxxghp/MoviePilot/issues/new/choose
+                    https://github.com/tianjian518/MovieRename/issues/new/choose
                   </a>
                 </span>
               </dd>

@@ -390,7 +390,7 @@ onDeactivated(() => {
                 <VTextField
                   v-model="SystemSettings.Basic.API_TOKEN"
                   label="API令牌"
-                  hint="设置外部请求MoviePilot API时使用的token值"
+                  hint="设置外部请求MovieRename API时使用的token值"
                   placeholder="不能小于16位字符"
                   persistent-hint
                   prependInnerIcon="mdi-reload"

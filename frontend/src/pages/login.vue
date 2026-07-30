@@ -237,7 +237,7 @@ onUnmounted(() => {
               <VImg :src="logo" width="64" height="64" />
             </div>
           </template>
-          <VCardTitle class="font-weight-bold text-2xl text-uppercase"> MoviePilot </VCardTitle>
+          <VCardTitle class="font-weight-bold text-2xl text-uppercase"> MovieRename </VCardTitle>
         </VCardItem>
         <VCardText>
           <VForm ref="refForm" autocomplete="on" @submit.prevent="() => {}">

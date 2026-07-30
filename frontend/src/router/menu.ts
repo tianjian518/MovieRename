@@ -30,6 +30,13 @@ export const SystemNavMenus = [
     admin: false,
   },
   {
+    title: '个人资料',
+    icon: 'mdi-account-circle',
+    to: '/profile',
+    header: '系统',
+    admin: false,
+  },
+  {
     title: '设定',
     icon: 'mdi-cog',
     to: '/setting',
