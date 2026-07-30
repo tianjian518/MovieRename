@@ -33,24 +33,18 @@ docker login
 docker push <dockerhub-user>/movierename:1.0
 ```
 
-### 多架构（linux/amd64 + linux/arm64，推荐）
+### 多架构（linux/amd64 + linux/arm64，已通过 CI 自动构建）
 
-> 需要本机已注册 QEMU binfmt（大多数 Linux 桌面/CI 已具备）：
-> `docker run --rm --privileged multiarch/qemu-user-static --reset -p yes`
-> 本沙箱环境禁止挂载 binfmt_misc，因此无法在此构建 arm64；请在你自己的环境执行。
+本项目已配置 GitHub Actions（`.github/workflows/build.yml`）：推送 `main` 分支或 `v*` 标签时，
+会自动在 GitHub runner（自带 QEMU）上构建 **amd64 + arm64** 双架构镜像并推送到 DockerHub，无需本机注册 QEMU。
 
-```bash
-# 创建并使用 buildx 构建器
-docker buildx create --name mr-builder --use 2>/dev/null || docker buildx use mr-builder
-docker buildx build \
-  --platform linux/amd64,linux/arm64 \
-  -t <dockerhub-user>/movierename:1.0 \
-  -t <dockerhub-user>/movierename:latest \
-  -f docker/Dockerfile . \
-  --push
-```
+手动触发：`gh workflow run build.yml`（前提：仓库已配置 `DOCKERHUB_USERNAME` / `DOCKERHUB_TOKEN` 两个 Secrets）。
 
 推送后可在 DockerHub 仓库的 "Tags" 页确认同时拥有 `linux/amd64` 与 `linux/arm64` 两个架构。
+
+> 若想在本机手动构建多架构（需本机已注册 QEMU binfmt）：
+> `docker run --rm --privileged multiarch/qemu-user-static --reset -p yes`
+> 然后 `docker buildx build --platform linux/amd64,linux/arm64 -t <dockerhub-user>/movierename:1.0 -f docker/Dockerfile . --push`
 
 ---
 
