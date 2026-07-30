@@ -138,8 +138,10 @@ async function handleTransfer(item: FileItem, background: boolean = false) {
     const result: { [key: string]: any } = await api.post(`transfer/manual?background=${background}`, transferForm)
     if (!result.success) $toast.error(result.message)
     else if (background) $toast.success(`文件 ${item.name} 已加入整理队列！`)
-  } catch (e) {
-    console.log(e)
+  } catch (e: any) {
+    const msg = e?.response?.data?.message || e?.message || '整理请求失败'
+    $toast.error(`整理失败：${msg}`)
+    console.error(e)
   }
 }
 
@@ -151,8 +153,10 @@ async function handleTransferLog(logid: number, background: boolean = false) {
     const result: { [key: string]: any } = await api.post(`transfer/manual?background=${background}`, transferForm)
     if (!result.success) $toast.error(result.message)
     else if (background) $toast.success(`历史记录 ${logid} 已加入整理队列！`)
-  } catch (e) {
-    console.log(e)
+  } catch (e: any) {
+    const msg = e?.response?.data?.message || e?.message || '整理请求失败'
+    $toast.error(`整理失败：${msg}`)
+    console.error(e)
   }
 }
 

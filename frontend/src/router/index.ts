@@ -67,6 +67,14 @@ const router = createRouter({
             requiresAuth: true,
           },
         },
+        {
+          path: '/history',
+          component: () => import('../pages/history.vue'),
+          meta: {
+            keepAlive: true,
+            requiresAuth: true,
+          },
+        },
       ],
     },
     {
