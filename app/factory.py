@@ -1,12 +1,18 @@
 from typing import Awaitable, Callable
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
 from app.helper.locale import LocaleHelper
 from app.startup.lifecycle import lifespan
+
+
+# 前端静态文件目录（Docker 构建时从 public/ 拷入）
+_FRONTEND_DIR = settings.ROOT_PATH / "public"
 
 
 async def localized_http_exception_handler(
@@ -70,5 +76,22 @@ def create_app() -> FastAPI:
     return _app
 
 
+def _mount_frontend(_app: FastAPI) -> None:
+    """
+    挂载前端静态文件：根路径 / 返回 index.html，/public/ 提供静态资源。
+    若 public/ 目录不存在则跳过（纯 API 模式）。
+    """
+    index = _FRONTEND_DIR / "index.html"
+    if not index.exists():
+        return
+
+    @_app.get("/", include_in_schema=False)
+    async def _serve_index() -> FileResponse:
+        return FileResponse(index, media_type="text/html; charset=utf-8")
+
+    _app.mount("/public", StaticFiles(directory=str(_FRONTEND_DIR)), name="public")
+
+
 # 创建 FastAPI 应用实例
 app = create_app()
+_mount_frontend(app)

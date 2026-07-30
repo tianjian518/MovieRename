@@ -1,8 +1,8 @@
 # syntax=docker/dockerfile:1
 # MovieRename 精简镜像
-# 仅保留「重命名 + 整理 + TMDB 识别」功能，已移除前端 / 插件 / 浏览器 / 站点二进制 /
-# 下载器 / 消息推送 / AI 智能体 / LLM 等依赖与下载步骤。
-# 支持 linux/amd64 与 linux/arm64（通过 buildx 多架构构建）。
+# 仅保留「重命名 + 整理 + TMDB 识别」功能，已移除插件 / 浏览器 / 站点二进制 /
+# 下载器 / 消息推送 / AI 智能体 / LLM / nginx 等依赖与下载步骤。
+# 内置极简 Web 前端（单页 HTML，无需额外构建），支持 linux/amd64 与 linux/arm64。
 
 FROM python:3.12-slim-bookworm
 
