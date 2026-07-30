@@ -1,11 +1,11 @@
 // 导航菜单（MovieRename 精简版：仅保留重命名 / 整理 / TMDB 识别 / 存储配置）
 export const SystemNavMenus = [
   {
-    title: '仪表板',
-    icon: 'mdi-home-outline',
-    to: '/dashboard',
+    title: '文件管理',
+    icon: 'mdi-folder-multiple-outline',
+    to: '/filemanager',
     header: '开始',
-    admin: false,
+    admin: true,
     footer: true,
   },
   {

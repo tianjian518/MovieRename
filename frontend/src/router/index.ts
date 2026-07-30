@@ -14,14 +14,14 @@ const router = createRouter({
     return { top: 0 }
   },
   routes: [
-    { path: '/', redirect: '/dashboard' },
+    { path: '/', redirect: '/filemanager' },
     {
       path: '/',
       component: () => import('../layouts/default.vue'),
       children: [
         {
-          path: '/dashboard',
-          component: () => import('../pages/dashboard.vue'),
+          path: '/filemanager',
+          component: () => import('../pages/filemanager.vue'),
           meta: {
             keepAlive: true,
             requiresAuth: true,
@@ -46,14 +46,6 @@ const router = createRouter({
         {
           path: '/media',
           component: () => import('../pages/media.vue'),
-          meta: {
-            keepAlive: true,
-            requiresAuth: true,
-          },
-        },
-        {
-          path: '/filemanager',
-          component: () => import('../pages/filemanager.vue'),
           meta: {
             keepAlive: true,
             requiresAuth: true,

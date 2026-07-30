@@ -10,20 +10,11 @@ const route = useRoute()
 
 const moreMenuDialog = ref(false)
 
-const moreMemus = computed(() => SystemNavMenus.filter(menu => !menu.footer))
+// 底部主按钮（最多 4 个），其余放入「更多」菜单
+const footerMenus = computed(() => SystemNavMenus.slice(0, 4))
+const moreMenus = computed(() => SystemNavMenus.slice(4))
 
-const activeState = computed(() => {
-  return {
-    home: route.path === '/dashboard',
-    recommend: route.path === '/recommend',
-    movie: route.path === '/subscribe/movie',
-    tv: route.path === '/subscribe/tv',
-  }
-})
-
-const moreActiveState = computed(() => {
-  return !Object.values(activeState.value).some(v => v)
-})
+const isActive = (to: string) => route.path === to || route.path.startsWith(`${to}/`)
 
 const currentPath = computed(() => route.path)
 </script>
@@ -38,27 +29,19 @@ const currentPath = computed(() => route.path)
       style="block-size: calc(3.5rem + env(safe-area-inset-bottom))"
       :z-index="9998"
     >
-      <VBtn to="/dashboard" :ripple="false">
-        <VIcon v-if="activeState.home" size="28">mdi-home</VIcon>
-        <VIcon v-else size="28">mdi-home-outline</VIcon>
+      <VBtn
+        v-for="menu in footerMenus"
+        :key="menu.to"
+        :to="menu.to"
+        :ripple="false"
+        :color="isActive(menu.to) ? 'primary' : undefined"
+      >
+        <VIcon size="28" :icon="menu.icon" />
       </VBtn>
-      <VBtn to="/recommend" :ripple="false">
-        <VIcon v-if="activeState.recommend" size="28">mdi-star</VIcon>
-        <VIcon v-else size="28">mdi-star-outline</VIcon>
-      </VBtn>
-      <VBtn to="/subscribe/movie" :ripple="false">
-        <VIcon v-if="activeState.movie" size="28">mdi-movie-open</VIcon>
-        <VIcon v-else size="28">mdi-movie-open-outline</VIcon>
-      </VBtn>
-      <VBtn to="/subscribe/tv" :ripple="false">
-        <VIcon v-if="activeState.tv" size="28">mdi-television-play</VIcon>
-        <VIcon v-else size="28">mdi-television</VIcon>
-      </VBtn>
-      <VBtn :ripple="false">
+      <VBtn :ripple="false" :color="moreMenus.length && moreMenus.every(m => !isActive(m.to)) ? 'primary' : undefined">
         <VIcon
           size="28"
           :icon="moreMenuDialog ? 'mdi-close' : 'mdi-dots-horizontal'"
-          :color="moreActiveState ? 'primary' : ''"
         />
         <VMenu v-model="moreMenuDialog" close-on-content-click activator="parent">
           <VDivider />
@@ -66,7 +49,7 @@ const currentPath = computed(() => route.path)
             <VListSubheader class="bg-transparent"> 更多 </VListSubheader>
             <VListItem
               class="pe-20"
-              v-for="(menu, index) in moreMemus"
+              v-for="(menu, index) in moreMenus"
               :key="index"
               :prepend-icon="menu.icon"
               nav
