@@ -54,8 +54,8 @@ docker push <dockerhub-user>/movierename:1.0
 docker run -d --name movierename -p 3000:3000 \
   -v /your/config:/config -v /your/media:/media \
   -e MOVIEPILOT_TMDB_API_KEY=<你的TMDB_API_KEY> \
-  <dockerhub-user>/movierename:1.0
+  tianjian518/movierename:1.0
 ```
 
-API 基地址：`http://<host>:3000`，文档：`/docs`。默认 API 令牌为 `moviepilot`
-（首次启动若未设置 `API_TOKEN` 会随机生成，可在日志中查看或用 `API_TOKEN` 环境变量固定）。
+API 基地址：`http://<host>:3000`，文档：`/docs`。Web 界面内置（仪表板 / 媒体库 / 文件管理 / 浏览 / 个人资料 / 设定 / 整理历史）。
+API 令牌（`API_TOKEN`）首次启动若未设置会**随机生成**并打印到日志，可用该环境变量固定。

@@ -39,11 +39,11 @@ docker run -d \
   -v /your/config:/config \
   -v /your/media:/media \
   -e MOVIEPILOT_TMDB_API_KEY=<你的TMDB_API_KEY> \
-  jxxghp/movierename:1.0
+  tianjian518/movierename:1.0
 ```
 
-> 镜像默认监听 `3000` 端口，直接由 uvicorn 提供 API（无 nginx / 前端）。
-> 首次启动会自动初始化 SQLite 数据库。
+> 镜像默认监听 `3000` 端口，内置一个**精简版的原版 Web 界面**（仪表板 / 媒体库 / 文件管理 / 浏览 / 个人资料 / 设定 / 整理历史），由后端同源提供，**无需额外反代**。
+> 首次启动会自动初始化 SQLite 数据库，并在日志中打印**超级管理员初始密码**与（若未设置）随机生成的 `API_TOKEN`。
 
 或使用 `docker-compose.yml`（仓库内已提供）：
 
@@ -58,8 +58,8 @@ docker compose up -d
 | `CONFIG_DIR` | 配置目录（建议挂载为卷） | `/config` |
 | `PORT` | API 监听端口 | `3000` |
 | `HOST` | 监听地址 | `0.0.0.0` |
-| `MOVIEPILOT_TMDB_API_KEY` | TMDB API Key（识别必需） | 空 |
-| `API_TOKEN` | API 访问令牌 | `moviepilot` |
+| `MOVIEPILOT_TMDB_API_KEY` | TMDB API Key（识别必需，没有它无法识别影视） | 空 |
+| `API_TOKEN` | API 访问令牌。未设置时首次启动**随机生成**并打印到日志；建议用此变量固定 | 随机生成 |
 
 ---
 
@@ -90,7 +90,48 @@ docker buildx build \
 - `POST /api/v1/transfer/transfer` —— 整理（重命名 + 归类）
 - `GET  /api/v1/system/global` —— 系统全局信息（健康检查端点）
 
-接口需携带 `token`（默认 `moviepilot`，可用 `API_TOKEN` 覆盖）。完整接口见运行中的 OpenAPI 文档：`http://<host>:3000/docs`。
+接口需携带 `token`（即 `API_TOKEN`，未设置时首次启动随机生成、可在日志查看）。完整接口见运行中的 OpenAPI 文档：`http://<host>:3000/docs`。
+
+---
+
+## 配置存储（本地 & OpenList）
+
+MovieRename 把"重命名 + 整理"作用在**存储**之上。至少需要配置一个**本地存储**用来放下载文件，以及一个**媒体库存储**作为整理目标。OpenList（AList 的衍生版）用于存储互通——例如把远程网盘挂载为 OpenList，再由 MovieRename 在本地与 OpenList 之间搬运/整理。
+
+### 1. 部署 OpenList（独立服务）
+
+OpenList 不是 MovieRename 的一部分，需自行部署（Docker 示例）：
+
+```bash
+docker run -d --name openlist -p 5244:5244 -v /your/openlist/data:/data onecloud/alist:latest
+# 首次启动后查看初始管理员密码：
+docker exec -it openlist ./alist admin
+```
+
+部署好后，在 OpenList 网页里添加你的存储（如阿里云盘 / 天翼云盘 / WebDAV 等），记下 OpenList 的**访问地址**（如 `http://<openlist-host>:5244`）与**管理员用户名/密码**（或生成的 token）。
+
+### 2. 在 MovieRename 里添加存储
+
+打开 MovieRename Web 界面 → **设定 → 存储 & 目录**：
+
+- **添加本地存储**：类型选 `local`，路径填写容器内的本地目录（对应你 `-v` 挂载的 `/media/...`）。
+- **添加 OpenList 存储**：类型选 `alist`，填写：
+  - 地址：`http://<openlist-host>:5244`
+  - 用户名 / 密码：OpenList 的管理员账号
+  - （部分版本需要填 `token` 而非密码，按 OpenList 后台给出的来）
+
+添加完成后，MovieRename 即可在「文件管理」中看到对应存储的文件树，并在**本地 ↔ OpenList** 之间执行重命名与整理。
+
+### 3. 配置目录（整理规则）
+
+同一页面下方配置：
+
+- **下载目录**：放待整理的原始文件（可指向本地存储或 OpenList 存储下的某个路径）。
+- **媒体库目录**：整理目标（电影 / 剧集 / 动漫等分类目录）。
+- **整理方式**：复制 / 硬链接 / 移动。
+- 还可开启刮削（下载海报/简介 NFO）。
+
+配置保存后，进入 **文件管理**，选中文件或目录 → 点 **整理**，按提示选择目标存储与分类，即可执行重命名 + 自动归类。任务进度与结果见 **整理历史**。
 
 ---
 
