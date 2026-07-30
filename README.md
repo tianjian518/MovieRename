@@ -59,7 +59,8 @@ docker compose up -d
 | `PORT` | API 监听端口 | `3000` |
 | `HOST` | 监听地址 | `0.0.0.0` |
 | `MOVIEPILOT_TMDB_API_KEY` | TMDB API Key（识别必需，没有它无法识别影视） | 空 |
-| `API_TOKEN` | API 访问令牌。未设置时首次启动**随机生成**并打印到日志；建议用此变量固定 | 随机生成 |
+| `SUPERUSER_PASSWORD` | 超级管理员（admin）初始密码。**不设则首次启动随机生成并打印到日志（仅显示一次）**。变量名即 `SUPERUSER_PASSWORD`，不要写成 `MOVIEPILOT_SUPERUSER_PASSWORD` | 随机生成 |
+| `API_TOKEN` | 外部脚本调用 REST API 的令牌。未设置时首次启动**随机生成**并打印到日志。**手动设置须 ≥ 16 个字符**，否则会被忽略并随机重置。Web 界面走登录 JWT，不依赖它 | 随机生成 |
 
 ---
 
@@ -86,11 +87,12 @@ docker buildx build \
 
 服务启动后，可通过 REST API 触发识别与整理，例如：
 
-- `POST /api/v1/transfer/recognize` —— 按路径识别媒体
-- `POST /api/v1/transfer/transfer` —— 整理（重命名 + 归类）
-- `GET  /api/v1/system/global` —— 系统全局信息（健康检查端点）
+- `POST /api/v1/media/recognize_file` —— 按文件路径识别媒体（返回 TMDB 识别结果）
+- `POST /api/v1/transfer/manual` —— 整理（重命名 + 归类，按目标存储与分类规则）
+- `GET  /api/v1/system/global?token=moviepilot` —— 系统全局信息（健康检查 / 版本端点，使用代码内置的静态 `token=moviepilot`，与你的 `API_TOKEN` 无关）
+- `POST /api/v1/login/access-token`（表单：`username` / `password`）—— 获取 JWT，Web 界面登录即走此接口
 
-接口需携带 `token`（即 `API_TOKEN`，未设置时首次启动随机生成、可在日志查看）。完整接口见运行中的 OpenAPI 文档：`http://<host>:3000/docs`。
+接口鉴权：Web 界面登录后携带 JWT（`Authorization: Bearer <token>`）；外部脚本调用 REST API 则携带 `?token=<API_TOKEN>` 或 `?apikey=<API_TOKEN>`（即 `API_TOKEN`，未设置时首次启动随机生成、可在日志查看）。完整接口见运行中的 OpenAPI 文档：`http://<host>:3000/docs`。
 
 ---
 

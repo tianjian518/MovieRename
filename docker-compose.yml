@@ -18,6 +18,11 @@ services:
       - HOST=0.0.0.0
       # TMDB 识别必需，请填入你自己的 Key
       - MOVIEPILOT_TMDB_API_KEY=
-      # API 令牌，默认 moviepilot
-      - API_TOKEN=moviepilot
+      # 超级管理员初始密码：不设则首次启动在日志随机生成（仅显示一次）
+      # 注意变量名就是 SUPERUSER_PASSWORD，不是 MOVIEPILOT_SUPERUSER_PASSWORD
+      - SUPERUSER_PASSWORD=
+      # API 令牌：不设则首次启动随机生成并打印到日志。
+      # 若手动设置，必须 >= 16 个字符，否则会被忽略并随机重置。
+      # 仅用于外部脚本调用 REST API，Web 界面走登录 JWT，不依赖它。
+      - API_TOKEN=
     restart: unless-stopped
