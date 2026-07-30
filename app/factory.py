@@ -11,8 +11,22 @@ from app.helper.locale import LocaleHelper
 from app.startup.lifecycle import lifespan
 
 
-# 前端静态文件目录（Docker 构建时从 public/ 拷入）
-_FRONTEND_DIR = settings.ROOT_PATH / "public"
+# 前端静态文件目录：优先使用与 app 包同级的 public/（容器 /app/public、
+# 本地仓库根 /public 均落在此处），并依次兜底多个候选位置，避免路径错配导致前端不挂载。
+def _resolve_frontend_dir() -> Path:
+    candidates = [
+        Path(__file__).resolve().parents[1] / "public",  # /app/public（容器内）
+        settings.ROOT_PATH / "public",                    # 配置根目录下的 public
+        Path("/app/public"),                              # 容器固定路径兜底
+        Path(__file__).resolve().parents[2] / "public",   # 本地仓库根 /public
+    ]
+    for _cand in candidates:
+        if (_cand / "index.html").exists():
+            return _cand
+    return candidates[0]
+
+
+_FRONTEND_DIR = _resolve_frontend_dir()
 
 
 async def localized_http_exception_handler(

@@ -26,7 +26,8 @@ config/temp/
 config/cache/
 config/.cache/
 .runtime/
-public/
+# 注意：public/ 为本项目内置的极简前端源码（零构建单页 HTML），必须纳入仓库随镜像分发
+# public/
 .moviepilot.env
 *.pyc
 *.log

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MovieRename</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f1117;--card:#1a1d27;--border:#2a2d3a;--text:#e4e4e7;--text2:#9ca3af;--accent:#6366f1;--accent-hover:#818cf8;--success:#22c55e;--warn:#f59e0b;--err:#ef4444;--radius:10px}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 16px}
+h1{font-size:1.6rem;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+h1 span{font-size:.85rem;color:var(--text2);font-weight:400}
+.subtitle{color:var(--text2);font-size:.85rem;margin-bottom:28px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;width:100%;max-width:680px;margin-bottom:16px}
+label{display:block;font-size:.85rem;color:var(--text2);margin-bottom:6px;font-weight:500}
+input,select,textarea{width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:.92rem;outline:none;transition:border .2s}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+textarea{resize:vertical;min-height:80px;font-family:inherit}
+.row{display:flex;gap:12px;margin-bottom:16px}
+.row>div{flex:1}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 22px;border-radius:8px;border:none;font-size:.92rem;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:var(--accent-hover)}
+.btn-success{background:var(--success);color:#fff}.btn-success:hover{opacity:.9}
+.btn-warn{background:var(--warn);color:#000}.btn-warn:hover{opacity:.9}
+.btn-sm{padding:7px 14px;font-size:.82rem}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-group{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+.result{background:var(--bg);border-radius:8px;padding:14px;font-size:.87rem;line-height:1.65;white-space:pre-wrap;word-break:break-all;max-height:420px;overflow:auto;margin-top:12px;display:none;border:1px solid var(--border)}
+.result.show{display:block}
+.result .ok{color:var(--success)}
+.result .err{color:var(--err)}
+.result .info{color:var(--accent)}
+.status-bar{display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--text2);margin-top:10px;min-height:20px}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--text2);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:18px}
+.tab{padding:10px 18px;cursor:pointer;font-size:.9rem;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.tab-panel{display:none}.tab-panel.active{display:block}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.75rem;background:var(--border);color:var(--text2);margin:2px 2px 2px 0}
+.footer{margin-top:20px;color:var(--text2);font-size:.78rem;text-align:center}
+a{color:var(--accent);text-decoration:none}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{text-align:left;color:var(--text2);padding:8px 6px;border-bottom:1px solid var(--border);font-weight:500}
+td{padding:8px 6px;border-bottom:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<h1>🎬 MovieRename <span>v1.0</span></h1>
+<p class="subtitle">影视文件重命名与整理工具 · 基于 TMDB 联网识别</p>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('rename')">📝 重命名 / 整理</div>
+  <div class="tab" onclick="switchTab('category')">📂 分类规则</div>
+  <div class="tab" onclick="switchTab('settings')">⚙️ 设置</div>
+</div>
+
+<!-- Tab 1: 重命名/整理 -->
+<div id="panel-rename" class="tab-panel active">
+<div class="card">
+  <div class="row"><div><label>API Token（留空使用默认值）</label><input id="token" type="text" placeholder="moviepilot"></div></div>
+  <div class="row"><div><label>文件路径或目录路径</label><input id="path" type="text" placeholder="例如：/media/downloads/电影名.2024.1080p.mp4 或 /media/downloads/"></div></div>
+  <div class="row">
+    <div><label>媒体类型</label><select id="mtype"><option value="">自动识别</option><option value="电影">电影</option><option value="电视剧">电视剧</option></select></div>
+    <div><label>整理方式</label><select id="transtype"><option value="move">移动（Move）</option><option value="copy">复制（Copy）</option></select></div>
+  </div>
+  <div class="btn-group">
+    <button class="btn btn-primary" onclick="doRecognize()" id="btn-recog">🔍 识别</button>
+    <button class="btn btn-success" onclick="doTransfer()" id="btn-trans">✅ 整理（重命名+归类）</button>
+  </div>
+  <div class="status-bar" id="status"></div>
+  <div class="result" id="result"></div>
+</div>
+</div>
+
+<!-- Tab 2: 分类规则 -->
+<div id="panel-category" class="tab-panel">
+<div class="card">
+  <div class="btn-group" style="margin-bottom:12px"><button class="btn btn-primary btn-sm" onclick="loadCategory()">🔄 刷新分类规则</button></div>
+  <div id="cat-result" class="result"></div>
+</div>
+</div>
+
+<!-- Tab 3: 设置 -->
+<div id="panel-settings" class="tab-panel">
+<div class="card">
+  <div class="btn-group" style="margin-bottom:12px"><button class="btn btn-primary btn-sm" onclick="loadGlobal()">📋 查看系统设置</button></div>
+  <div id="settings-result" class="result"></div>
+</div>
+<div class="card">
+  <h3 style="margin-bottom:12px;font-size:.95rem">快速说明</h3>
+  <p style="color:var(--text2);font-size:.85rem;line-height:1.7">
+    MovieRename 从 <a href="https://github.com/jxxghp/MoviePilot" target="_blank">MoviePilot</a> 精简而来，仅保留<strong>重命名 + 整理 + TMDB 识别</strong>功能。<br><br>
+    • 支持存储后端：<span class="tag">本地</span> <span class="tag">Alist/OpenList</span> <span class="tag">阿里云盘</span> <span class="tag">115</span> <span class="tag">SMB</span> <span class="tag">Rclone</span><br>
+    • 完整保留原版分类体系：华语电影、外语电影、国产剧、欧美剧、动漫、纪录片等全部沿用<br>
+    • API 文档：<a href="/docs" target="_blank">Swagger UI (/docs)</a> · <a href="/redoc" target="_blank">ReDoc (/redoc)</a><br>
+    • 健康检查：<code>GET /api/v1/system/global?token=&lt;your_token&gt;</code> 返回 200 即正常<br><br>
+    <strong>使用流程：</strong>在「重命名/整理」标签页输入文件/目录路径 → 先点「识别」查看 TMDB 识别结果 → 确认无误后点「整理」执行重命名并按分类归类。
+  </p>
+</div>
+</div>
+
+<div class="footer">
+  MovieRename v1.0 · 基于 <a href="https://github.com/jxxghp/MoviePilot" target="_blank">MoviePilot</a> 精简 · 
+  <a href="https://github.com/tianjian518/MovieRename" target="_blank">GitHub</a>
+</div>
+
+<script>
+const API = '/api/v1';
+const $ = id => document.getElementById(id);
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', t.onclick.toString().includes(name));
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => {
+    p.classList.toggle('active', p.id === 'panel-' + name);
+  });
+}
+
+function setStatus(msg, loading=false) {
+  $('status').innerHTML = loading ? '<span class="spinner"></span>' + msg : msg;
+}
+
+function showResult(html, cls='') {
+  const el = $('result');
+  el.innerHTML = html || '<span class="err">无返回数据</span>';
+  el.className = 'result show' + (cls ? ' ' + cls : '');
+}
+
+function showCatResult(html) {
+  const el = $('cat-result');
+  el.innerHTML = html || '<span class="err">无数据</span>';
+  el.className = 'result show';
+}
+
+function showSettingsResult(html) {
+  const el = $('settings-result');
+  el.innerHTML = html || '<span class="err">无数据</span>';
+  el.className = 'result show';
+}
+
+function getToken() { return $('token').value.trim() || 'moviepilot'; }
+function qs(token) { return '?token=' + encodeURIComponent(token); }
+
+async function api(method, url, body) {
+  const opts = { method, headers: {'Content-Type':'application/json'} };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  const data = await res.json().catch(() => ({detail: await res.text()}));
+  return { status: res.status, data };
+}
+
+// --- 识别 ---
+async function doRecognize() {
+  const path = $('path').value.trim();
+  if (!path) { setStatus('请输入文件或目录路径'); return; }
+  const token = getToken();
+  setStatus('正在识别...', true);
+  const {status, data} = await api('POST', `${API}/transfer/recognize${qs(token)}`, {
+    path: path,
+    type: $('mtype').value || undefined
+  });
+  setStatus('');
+  if (status === 200 && data.success !== false) {
+    const j = JSON.stringify(data.data ?? data, null, 2);
+    showResult('<span class="ok">✅ 识别成功</span>\n\n' + syntaxHighlight(j), 'ok');
+  } else {
+    showResult('<span class="err">❌ 识别失败 (' + status + ')</span>\n\n' + syntaxHighlight(JSON.stringify(data, null, 2)), 'err');
+  }
+}
+
+// --- 整理 ---
+async function doTransfer() {
+  const path = $('path').value.trim();
+  if (!path) { setStatus('请输入文件或目录路径'); return; }
+  const token = getToken();
+  const type = $('transtype').value;
+  setStatus('正在整理（这可能需要一些时间）...', true);
+  const {status, data} = await api('POST', `${API}/transfer/transfer${qs(token)}`, {
+    path: path,
+    type: type,
+    mtype: $('mtype').value || undefined
+  });
+  setStatus('');
+  if (status === 200 && data.success !== false) {
+    const j = JSON.stringify(data.data ?? data, null, 2);
+    showResult('<span class="ok">✅ 整理完成</span>\n\n' + syntaxHighlight(j), 'ok');
+  } else {
+    showResult('<span class="err">❌ 整理失败 (' + status + ')</span>\n\n' + syntaxHighlight(JSON.stringify(data, null, 2)), 'err');
+  }
+}
+
+// --- 分类规则 ---
+async function loadCategory() {
+  const token = getToken();
+  setStatus('加载分类规则...', true);
+  const {status, data} = await api('GET', `${API}/media/category${qs(token)}`);
+  setStatus('');
+  if (status === 200) {
+    renderCategory(data.data ?? data);
+  } else {
+    showCatResult('<span class="err">加载失败 (' + status + ')</span>\n' + JSON.stringify(data, null, 2));
+  }
+}
+
+function renderCategory(cat) {
+  if (!cat || typeof cat !== 'object') {
+    showCatResult(syntaxHighlight(JSON.stringify(cat, null, 2))); return;
+  }
+  let html = '';
+  for (const [group, rules] of Object.entries(cat)) {
+    html += `<h4 style="margin:14px 0 8px;color:var(--accent)">${escapeHtml(group)}</h4>`;
+    if (Array.isArray(rules)) {
+      rules.forEach(r => {
+        html += `<div style="margin:4px 0;padding:6px 10px;background:var(--bg);border-radius:6px;font-size:.83rem">`;
+        if (r.name) html += `<strong>${escapeHtml(r.name)}</strong> `;
+        if (r.genre_ids?.length) html += `<span class="tag">类型:${r.genre_ids.join(',')}</span> `;
+        if (r.original_language) html += `<span class="tag">语言:${escapeHtml(r.original_language)}</span> `;
+        if (r.origin_country?.length) html += `<span class="tag">产地:${r.origin_country.join(',')}</span> `;
+        if (r.release_year) html += `<span class="tag">年份:≥${r.release_year}</span> `;
+        if (r.target) html += `→ <span class="ok">${escapeHtml(r.target)}</span>`;
+        html += `</div>`;
+      });
+    } else {
+      html += `<pre style="font-size:.82rem">${syntaxHighlight(JSON.stringify(rules, null, 2))}</pre>`;
+    }
+  }
+  showCatResult(html);
+}
+
+// --- 系统设置 ---
+async function loadGlobal() {
+  const token = getToken();
+  setStatus('加载系统设置...', true);
+  const {status, data} = await api('GET', `${API}/system/global${qs(token)}`);
+  setStatus('');
+  if (status === 200) {
+    // 过滤掉敏感信息只显示部分
+    const safe = {};
+    const showKeys = ['PROJECT_NAME','BACKEND_VERSION','TMDB_API_KEY','RECOGNIZE_SOURCE',
+      'SEARCH_SOURCE','MOVIE_RENAME_FORMAT','TV_RENAME_FORMAT','TRANSFER_TYPE'];
+    const d = data.data ?? data;
+    for (const k of showKeys) if (d[k] !== undefined) safe[k] = d[k];
+    showSettingsResult(syntaxHighlight(JSON.stringify(safe, null, 2)));
+  } else {
+    showSettingsResult('<span class="err">加载失败 (' + status + ')</span>');
+  }
+}
+
+// --- 工具 ---
+function escapeHtml(s) {
+  const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+}
+function syntaxHighlight(json) {
+  if (typeof json !== 'string') json = JSON.stringify(json, null, 2);
+  return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, match => {
+    let cls = 'info';
+    if (/^"/.test(match)) cls = /:$/.test(match) ? 'err' : 'ok';
+    else if (/true|false/.test(match)) cls = 'warn';
+    return `<span class="${cls}">${match}</span>`;
+  });
+}
+
+// 页面加载后自动检查健康
+(async () => {
+  try {
+    const r = await fetch(`${API}/system/global?token=moviepilot`);
+    if (r.ok) {
+      const d = await r.json();
+      const ver = (d.data||{})['BACKEND_VERSION'] || 'v1.0';
+      document.querySelector('.subtitle').textContent =
+        `影视文件重命名与整理工具 · 基于 TMDB 联网识别 · ${ver} · 服务正常运行`;
+    }
+  } catch(e) {}
+})();
+</script>
+</body>
+</html>
